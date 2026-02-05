@@ -97,8 +97,18 @@ int pactlIndex(char sinkName[], char index[]) {
 	};
 	int PCMode() {
 		pid_t pidPC = fork();
+                if (pidPC == -1) {
+                        perror("fork error \n");
+                        exit(1);
+                }
 		pactlIndex("analog", analogIndex);
 		if (pidPC == 0) {
+                        pid_t pid2=fork();
+                        if (pid2 == 0) {
+                                char* arr[] = {"xrandr", "--output", loc_MonSide, "--mode", "1920x1080", "--same-as", loc_TV, NULL};
+                                execv("/bin/xrandr", arr);
+                                printf("Process Complete\n");
+                        }
 			char* audioarr[] = {"pactl", "set-default-sink", analogIndex, NULL};
                         execv("/bin/pactl", audioarr);
 			printf("Process Failed.\n");
@@ -108,10 +118,10 @@ int pactlIndex(char sinkName[], char index[]) {
 	};
 
 int main(int argc, char* argv[]) {
-	if (!strcmp(argv[1], "1")) {
+	if (!strcmp(argv[1], "1") || !strcmp(argv[1], "TV")) {
 		return TVMode();
 	}	
-	else if (!strcmp(argv[1], "2")){
+	else if (!strcmp(argv[1], "2")|| !strcmp(argv[1], "PC")){
 		return PCMode();
 	}
 	else {
